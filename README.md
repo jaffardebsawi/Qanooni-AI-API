@@ -18,15 +18,6 @@ You need two things: **Python 3.12** and the **`.env` file** that Jaffar sends y
 
 **To stop the server, close the black window.** The server stops with it.
 
-## Try it in the docs page
-
-1. Click **Authorize** (top right) and paste the `API_KEY` from your `.env`, then **Authorize**.
-2. Open any endpoint, click **Try it out**, fill it in, and click **Execute**.
-
-To chat: run `POST /v1/chats` with a real `user_id` to get a `chat_id`, then `POST /v1/chats/{chat_id}/messages`
-with the same `user_id` and your `message`.
-The full flow is in [CHAT_CONTRACT.md](CHAT_CONTRACT.md).
-
 ## If something goes wrong
 
 | What you see | What to do |
