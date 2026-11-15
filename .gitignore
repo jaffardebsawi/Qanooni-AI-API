@@ -1,0 +1,19 @@
+# secrets: never commit
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# local runtime data (created automatically)
+data/
+qdrant_data/
+uploads/
+attachments/
+
+# demo files and dev-only material, not needed to run
+fake_files/
+REQUIREMENTS.md
+scripts/*
+!scripts/create_chat_tables.py
