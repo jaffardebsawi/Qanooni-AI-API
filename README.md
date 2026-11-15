@@ -18,16 +18,6 @@ You need two things: **Python 3.12** and the **`.env` file** that Jaffar sends y
 
 **To stop the server, close the black window.** The server stops with it.
 
-## If something goes wrong
-
-| What you see | What to do |
-|---|---|
-| "Python was not found" | Install Python 3.12 and tick "Add to PATH", then run `run-server.bat` again. |
-| "The .env file is missing" | Put the `.env` file in the same folder as `run-server.bat`. |
-| `Client with IP address ... is not allowed to access the server` | The database only lets approved computers in. Send Jaffar the IP address from the message so it can be added. |
-| `Field required` or a settings error | A value is missing in `.env`. Compare it with `.env.example`. |
-| `address already in use` | Another copy is already running. Close the other window. |
-
 ## Project layout
 
 ```
@@ -40,8 +30,3 @@ fonts/               Arabic fonts used when making PDFs
 scripts/create_chat_tables.py   creates the chat tables in SQL (already done once)
 .env.example         the settings the API needs
 ```
-
-## Notes
-
-- `.env` holds passwords. Do not commit it or post it anywhere public.
-- Source citations in chat answers are switched off for now (commented out in `app/chat.py`).
