@@ -15,12 +15,6 @@ class Settings(BaseSettings):
     classifier_model: str = "gpt-5-mini"
     azure_openai_deployment: str = "gpt-5.2"  # chat model
     ocr_url: str
-    sql_server: str
-    sql_port: int = 1433
-    sql_database: str
-    sql_user: str
-    sql_password: str
-    attachments_root: str = "attachments"  # folder holding dbo.Attachments.Path files (on the VM)
     data_dir: str = "data"  # deliverables and custom templates
     cors_origins: str = "*"  # comma-separated list of frontend origins
 

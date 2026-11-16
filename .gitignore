@@ -16,5 +16,4 @@ attachments/
 fake_files/
 REQUIREMENTS.md
 scripts/*
-!scripts/create_chat_tables.py
 CHAT_CONTRACT.md

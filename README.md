@@ -24,9 +24,8 @@ You need two things: **Python 3.12** and the **`.env` file** that Jaffar sends y
 run-server.bat       starts the server (Windows)
 app/                 the API code
   main.py            all endpoints
-  chat.py, chatdb.py chat logic and the Azure SQL chat storage
+  chat.py            streamed AI answers
   generate.py        document drafting
 fonts/               Arabic fonts used when making PDFs
-scripts/create_chat_tables.py   creates the chat tables in SQL (already done once)
 .env.example         the settings the API needs
 ```

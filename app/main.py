@@ -1,19 +1,18 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
-from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from . import chat as chat_mod
-from . import chatdb, db
+from . import db
 from . import generate as gen_mod
 from . import templates_store as ts
 from .extract import extract_text
 from .ingest import new_job, run_job
-from .models import (Category, ChatCreate, GenerationCreate, GenerationMessage, IngestRequest, MessageCreate,
-                     ReviseRequest, TemplateFromDocument)
+from .models import (Category, ChatRequest, GenerationCreate, GenerationMessage, IngestRequest, ReviseRequest,
+                     TemplateFromDocument)
 from .routes_cases import router as cases_router
 from .settings import settings
 from .store import get_source_path, search
@@ -151,28 +150,12 @@ def get_ingestion_job(job_id: str):
     return job
 
 
-@app.post("/v1/chats", status_code=201, tags=["chat"])
-def create_chat(req: ChatCreate):
-    """Create an empty chat in `dbo.Chats` for a user and return its `chat_id`."""
-    chat = chatdb.create_chat(str(req.user_id), req.title)
-    if not chat:
-        raise HTTPException(404, "User not found")
-    return chat
-
-
-@app.post("/v1/chats/{chat_id}/messages", tags=["chat"])
-def post_message(chat_id: UUID, req: MessageCreate):
-    """Chat turn. The chat row is created by the .NET app in `dbo.Chats`; this saves the user message and the AI reply
-    to `dbo.ChatMessages` and returns the reply. The last 20 messages and the chat's attachments are the context.
-
-    The message may instead ask for a document ("make me an NDA", in English or Arabic). Then `action` is
-    `generation`: `generation.status` is `needs_info` (questions in `answer`), `complete` (download links in
-    `generation.deliverable`) or `revised`. Keep replying in the same chat to answer the questions or to ask for changes.
-    """
-    chat = chatdb.get_chat(str(chat_id), str(req.user_id))
-    if not chat:
-        raise HTTPException(404, "Chat not found for this user")
-    return chat_mod.send_message(chat, req)
+@app.post("/v1/chat", tags=["chat"])
+def chat(req: ChatRequest):
+    """Streams the AI's answer to one message as plain UTF-8 text, as it is written. Nothing is stored.
+    The legal disclaimer is in the `X-Disclaimer` response header."""
+    return StreamingResponse(chat_mod.stream_answer(req.message), media_type="text/plain; charset=utf-8",
+                             headers={"X-Disclaimer": chat_mod.DISCLAIMER})
 
 
 @app.get("/v1/documents/search", tags=["documents"])

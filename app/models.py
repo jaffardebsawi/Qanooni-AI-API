@@ -1,5 +1,4 @@
 from enum import Enum
-from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -40,15 +39,8 @@ class DocumentUpdate(BaseModel):
     metadata: dict | None = None
 
 
-class ChatCreate(BaseModel):
-    user_id: UUID  # dbo.AppUsers.Id of the chat's owner
-    title: str | None = None
-
-
-class MessageCreate(BaseModel):
-    user_id: UUID  # dbo.AppUsers.Id of the chat's owner
+class ChatRequest(BaseModel):
     message: str
-    attachment_ids: list[UUID] = []  # dbo.Attachments.Id of files sent with this message
 
 
 class GenerationCreate(BaseModel):
