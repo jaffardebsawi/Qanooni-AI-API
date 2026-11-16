@@ -8,8 +8,18 @@ from .settings import settings
 # dbo.ChatMessages.Role. Only 1 (user) exists in the data so far; 2 (assistant) is assumed. Other values are skipped.
 ROLES = {1: "user", 2: "assistant"}
 
-_driver = sorted(d for d in pyodbc.drivers() if "SQL Server" in d)[-1]
-_conn_str = (f"DRIVER={{{_driver}}};SERVER={settings.sql_server},{settings.sql_port};DATABASE={settings.sql_database};"
+
+def _pick_driver() -> str:
+    """Best installed SQL Server ODBC driver. "SQL Server Native Client" is skipped on purpose: it is deprecated and
+    often broken, and sorting driver names alphabetically would pick it over the working ones."""
+    installed = pyodbc.drivers()
+    for name in ("ODBC Driver 18 for SQL Server", "ODBC Driver 17 for SQL Server", "SQL Server"):
+        if name in installed:
+            return name
+    raise RuntimeError(f"No usable SQL Server ODBC driver found. Installed drivers: {installed}")
+
+
+_conn_str = (f"DRIVER={{{_pick_driver()}}};SERVER={settings.sql_server},{settings.sql_port};DATABASE={settings.sql_database};"
              f"UID={settings.sql_user};PWD={settings.sql_password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30")
 
 
