@@ -2,6 +2,7 @@ fastapi
 uvicorn
 python-multipart
 pydantic-settings
+pyodbc
 openai
 qdrant-client
 pypdf

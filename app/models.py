@@ -1,4 +1,5 @@
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -40,6 +41,7 @@ class DocumentUpdate(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    chat_id: UUID  # dbo.Chats.Id; its last 20 messages are the context
     message: str
 
 

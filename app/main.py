@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 from . import chat as chat_mod
-from . import db
+from . import chatdb, db
 from . import generate as gen_mod
 from . import templates_store as ts
 from .extract import extract_text
@@ -16,6 +16,10 @@ from .models import (Category, ChatRequest, GenerationCreate, GenerationMessage,
 from .routes_cases import router as cases_router
 from .settings import settings
 from .store import get_source_path, search
+
+
+# Fixed for now: every chat is accessed as this user (dbo.AppUsers.Id) until real users are wired in.
+STATIC_USER_ID = "D841C067-CE0D-4F7E-902F-08DF2C9481E0"
 
 
 def require_key(x_api_key: str | None = Header(None)):
@@ -152,9 +156,13 @@ def get_ingestion_job(job_id: str):
 
 @app.post("/v1/chat", tags=["chat"])
 def chat(req: ChatRequest):
-    """Streams the AI's answer to one message as plain UTF-8 text, as it is written. Nothing is stored.
+    """Streams the AI's answer to `message` as plain UTF-8 text, as it is written. The context is the chat's last 20
+    messages, read from SQL; nothing is stored here. 404 when the chat is not the user's.
     The legal disclaimer is in the `X-Disclaimer` response header."""
-    return StreamingResponse(chat_mod.stream_answer(req.message), media_type="text/plain; charset=utf-8",
+    history = chatdb.recent_messages(str(req.chat_id), STATIC_USER_ID, chat_mod.HISTORY_MESSAGES)
+    if history is None:
+        raise HTTPException(404, "Chat not found")
+    return StreamingResponse(chat_mod.stream_answer(req.message, history), media_type="text/plain; charset=utf-8",
                              headers={"X-Disclaimer": chat_mod.DISCLAIMER})
 
 
