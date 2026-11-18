@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 from . import chat as chat_mod
-from . import chatdb, db
+from . import chatdb, db, itemdb
 from . import generate as gen_mod
 from . import templates_store as ts
 from .extract import extract_text
@@ -157,13 +157,28 @@ def get_ingestion_job(job_id: str):
 @app.post("/v1/chat", tags=["chat"])
 def chat(req: ChatRequest):
     """Streams the AI's answer to `message` as plain UTF-8 text, as it is written. The context is the chat's last 20
-    messages, read from SQL; nothing is stored here. 404 when the chat is not the user's.
-    The legal disclaimer is in the `X-Disclaimer` response header."""
+    messages (SQL), the files attached to them, and optionally an item (`item_type` + `item_id`, e.g. a grievance).
+    Without an item the AI can query the database. Files the AI creates are announced by a last line
+    `[[attachments:<id>,<id>]]`. Nothing is stored here. 422 on a bad item_type/item_id, 404 when the chat or item
+    is not found. The legal disclaimer is in the `X-Disclaimer` response header."""
+    item_type = req.item_type.strip().lower() if req.item_type else None
+    if req.item_id and not item_type:
+        raise HTTPException(422, "No item type was specified (item_id was sent without item_type)")
+    if item_type and not req.item_id:
+        raise HTTPException(422, "item_id is missing")
+    if item_type and item_type not in itemdb.SUPPORTED_TYPES:
+        raise HTTPException(422, f"Unknown item_type '{item_type}'. Supported types: {', '.join(itemdb.SUPPORTED_TYPES)}")
     history = chatdb.recent_messages(str(req.chat_id), STATIC_USER_ID, chat_mod.HISTORY_MESSAGES)
     if history is None:
         raise HTTPException(404, "Chat not found")
-    return StreamingResponse(chat_mod.stream_answer(req.message, history), media_type="text/plain; charset=utf-8",
-                             headers={"X-Disclaimer": chat_mod.DISCLAIMER})
+    item = None
+    if item_type:
+        item = itemdb.item_context(item_type, str(req.item_id))
+        if item is None:
+            raise HTTPException(404, f"Item not found: no {item_type} with id {req.item_id}")
+    stream = chat_mod.stream_answer(req.message, history, item_type, item, [str(a) for a in req.attachment_ids],
+                                    str(req.chat_id))
+    return StreamingResponse(stream, media_type="text/plain; charset=utf-8", headers={"X-Disclaimer": chat_mod.DISCLAIMER})
 
 
 @app.get("/v1/documents/search", tags=["documents"])

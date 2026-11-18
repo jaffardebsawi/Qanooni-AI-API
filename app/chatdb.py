@@ -33,3 +33,16 @@ def recent_messages(chat_id: str, user_id: str, limit: int) -> list[dict] | None
         rows = cur.execute("SELECT TOP (?) Role, Content FROM dbo.ChatMessages WHERE ChatId = ? AND IsDeleted = 0 "
                            "ORDER BY CreatedDate DESC", limit, chat_id).fetchall()
     return [{"role": ROLES[r.Role], "content": r.Content} for r in reversed(rows) if r.Role in ROLES]
+
+
+def recent_attachment_ids(chat_id: str, limit: int) -> list[str]:
+    """Ids (uppercase GUID strings) of the live attachments linked to the newest `limit` non-deleted messages of the
+    chat, newest message first, no duplicates. The caller has already checked that the chat is the user's."""
+    with closing(pyodbc.connect(_conn_str, readonly=True)) as c:
+        rows = c.cursor().execute(
+            "SELECT a.Id FROM (SELECT TOP (?) Id, CreatedDate FROM dbo.ChatMessages WHERE ChatId = ? AND IsDeleted = 0 "
+            "ORDER BY CreatedDate DESC) m "
+            "JOIN dbo.ChatMessageAttachments ma ON ma.ChatMessageId = m.Id "
+            "JOIN dbo.Attachments a ON a.Id = ma.AttachmentId AND a.IsDeleted = 0 AND a.IsActive = 1 "
+            "ORDER BY m.CreatedDate DESC", limit, chat_id).fetchall()
+    return list(dict.fromkeys(str(r.Id).upper() for r in rows))

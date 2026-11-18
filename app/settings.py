@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     sql_database: str
     sql_user: str
     sql_password: str
+    attachments_base_url: str
+    attachments_upload_path: str
+    attachments_download_path: str
+    attachments_token: str
     data_dir: str = "data"  # deliverables and custom templates
     cors_origins: str = "*"  # comma-separated list of frontend origins
 

@@ -43,6 +43,9 @@ class DocumentUpdate(BaseModel):
 class ChatRequest(BaseModel):
     chat_id: UUID  # dbo.Chats.Id; its last 20 messages are the context
     message: str
+    item_type: str | None = None  # e.g. "grievance"; needs item_id
+    item_id: UUID | None = None
+    attachment_ids: list[UUID] = []  # files attached to this message
 
 
 class GenerationCreate(BaseModel):
